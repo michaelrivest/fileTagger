@@ -26,9 +26,8 @@ const fileTypes = {
 const logPriority = argv.verbose ? 2 : argv.quiet ? 0 : 1;
 
 const tail = (iter) => iter.slice(1, iter.length);
-const lowerCase = (s) => s.toLowerCase();
 
-const standardExt = (fileName) => lowerCase(tail(path.extname(fileName))); 
+const standardExt = (fileName) => tail(path.extname(fileName)).toLowerCase(); 
 
 const findKeyIncluding = (obj, value) => Object.keys(obj).find(key => obj[key].includes(value))
 
@@ -52,17 +51,13 @@ const readTags = (file) => argv.read ? log(0, `${path.basename(file.path)} Tags:
 
 function exitMessage (msg) { 
     log(1, msg); 
-    if (logPriority == 2) {
-        console.timeEnd("ftag"); 
-    }
+    if (logPriority == 2) console.timeEnd("ftag"); 
     process.exit(1);
 }
 
 function log(priority, ...expressions) {
     if (priority > logPriority) return false;
-    for (let expr of expressions) {
-        console.log(expr)
-    }
+    expressions.forEach(expr => console.log(expr));
 }
 
 function createFileRecord(fileData) {
@@ -75,7 +70,6 @@ function createFileRecord(fileData) {
     log(2, "Creating New Entry for " + fileRecord.path)
     store.addToStore(fileRecord);
     return fileRecord;
-
     }
    }
 
@@ -99,7 +93,7 @@ function getFileData(files) {
 function getFileRecords(files) {
     let filesOnly = getDirFiles(files).filter(f => f.type == 'file')
     log(1, "Files: " + filesOnly.map(f => path.basename(f.path)).join(', '))
-        return filesOnly.map((file) => {
+    return filesOnly.map((file) => {
         let existing = store.searchStore({ path: file.path })
         if (existing) log(2, "Updating File: " + existing[0].path)
         return existing ? existing[0] : createFileRecord(file);
@@ -120,13 +114,14 @@ function remTags(tags, files) {
 }
 
 function validateArgs() {
-    if (!argv._ || argv._.length < 1) exitMessage("No files Specified - Enter file names to apply tags to before other options.");
+    if (!argv._ || argv._.length < 1) exitMessage("No files Specified - Enter file / directories before other options.");
     else if (!argv.tags || argv.tags.length < 1) exitMessage("Specify tags to apply with -t");
 }
 
 function main() {
     console.time("ftag");
 
+    validateArgs();
     let files = getFileData(getFileNames(argv._, process.cwd()));
     let tags = argv.tags;
 
@@ -139,5 +134,4 @@ function main() {
     });
 }
 
-validateArgs();
 main();

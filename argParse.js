@@ -1,10 +1,12 @@
 
 module.exports = function (args, argv) {
-    let defaultSet = args.filter(a => a.default).reduce((acc, cur) => {acc[cur.name] = false; return acc; }, {})
+    let defaultSet = args.filter(a => a.default).reduce((acc, cur) => { acc[cur.name] = false; return acc; }, {})
 
     let byPosition = args.map(arg => Object.assign(arg, { index: argv.indexOf(arg.arg) }))
         .filter(arg => ('default' in arg) || arg.index >= 0).sort((a, b) => a.index - b.index);
+
     return byPosition.reduce((acc, cur, i) => {
+
        if (cur.default && (args.map(a => a.arg).includes(argv[cur.index+1]) || !argv[cur.index+1]) ) { 
            acc[cur.name] = cur.default;
        } else if (cur.index < 0) {
@@ -17,5 +19,6 @@ module.exports = function (args, argv) {
         else acc[cur.name] = argv[cur.index + 1];
 
         return acc;
+
     }, { default: defaultSet,  _: argv.slice(2, byPosition[0] ? byPosition[0].index : argv.length) })
 }

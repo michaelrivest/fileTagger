@@ -10,7 +10,4 @@ module.exports = function(fullPath) {
             if (fullPath.startsWith(currentPath)) return '../'.repeat(pathDirs.length - i) + fullPath.slice(currentPath.length + 1, fullPath.length);  
         }
     }
-
-
-
 }

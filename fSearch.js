@@ -17,8 +17,8 @@ let query = require('./argParse')(args, process.argv);
 
 function logMatch(match) {
     let name = query.fullPath ? match.path : relPath(match.path);
-        console.log(name);
-        if (query.readMode) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `) 
+    console.log(name);
+    if (query.readMode) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `) 
 }
 
 
@@ -26,11 +26,8 @@ function main() {
     let matches = store.searchStore(query);
 
     if (matches) {
-
-    if (!query.default.limit) matches = matches.slice(0, query.limit);
-
-    matches.forEach(logMatch)
-       
+        if (!query.default.limit) matches = matches.slice(0, query.limit);
+        matches.forEach(logMatch)
     }
 
     process.exit(1);
