@@ -23,6 +23,7 @@ function logMatch(match) {
 
 
 function main() {
+    console.log(query);
     let matches = store.searchStore(query);
 
     if (matches) {

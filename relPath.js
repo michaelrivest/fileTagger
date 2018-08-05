@@ -7,7 +7,8 @@ module.exports = function(fullPath) {
         let pathDirs = wd.split('/');
         for (let i = pathDirs.length; i > 0; i--) {
             let currentPath = pathDirs.slice(0, i).join('/');
-            if (fullPath.startsWith(currentPath)) return '../'.repeat(pathDirs.length - i) + fullPath.slice(currentPath.length + 1, fullPath.length);  
+            console.log(currentPath);
+            if (fullPath.startsWith(currentPath)) return '../'.repeat(pathDirs.length - i) + fullPath.slice(currentPath.length - 1, fullPath.length);  
         }
     }
 }
