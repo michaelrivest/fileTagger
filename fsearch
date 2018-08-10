@@ -23,7 +23,7 @@ function logMatch(match) {
 
 
 function main() {
-    console.log(query);
+    if (!query.andTags && !query.orTags) query.andTags = query._;
     let matches = store.searchStore(query);
 
     if (matches) {
