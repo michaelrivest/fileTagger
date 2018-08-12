@@ -63,7 +63,7 @@ function log(priority, ...expressions) {
 function createFileRecord(fileData) {
     let fileCat = getFileCategory(fileData.path);
     if (!fileCat) {
-        log(2, "Unrecognized Extension for " + fileRecord.path)
+        log(2, "Unrecognized Extension for " + fileData.path)
         return null;
     } else {
  let fileRecord = Object.assign({ category: fileCat, tags: [] }, fileData);

@@ -1,5 +1,6 @@
 #! /usr/local/bin/node
-let fs = require('fs');
+let path = require('path');
+let exec = require('child_process').exec
 let relPath = require('./relPath');
 let store = require('./fStore');
 
@@ -9,18 +10,62 @@ let args = [
     { arg: '-o', name: 'orTags', type: 'array' },
     { arg: '-r', name: 'readMode', type: 'boolean' },
     { arg: '-n', name: 'name', type: 'string' },
+    { arg: '-x', name: 'exec', type: 'boolean' },
     { arg: '-f', name: 'fullPath', type: 'boolean' },
     { arg: '-l', name: 'limit', type: 'number', default: 1 }
 ]
 
 let query = require('./argParse')(args, process.argv);
 
-function logMatch(match) {
-    let name = query.fullPath ? match.path : relPath(match.path);
-    console.log(name);
-    if (query.readMode) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `) 
+
+function logMatches(matches) {
+    matches.forEach(logMatch)
 }
 
+function logMatch(match, i) {
+    let name = query.fullPath ? match.path : relPath(match.path);
+    if (query.exec) console.log(`${i + 1}:  ${path.basename(name)}`)
+    else console.log(name);
+
+    if (query.readMode) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `)
+}
+
+function execMode(matches) {
+    console.log("Exec mode - Enter a number to open a file, type 'exit' to quit.")
+    logMatches(matches);
+
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('readable', () => {
+        const chunk = process.stdin.read();
+        if (chunk !== null) {
+            if (inputValid(chunk)) {
+                let fileIndex = parseInt(chunk) - 1;
+                let file = matches[fileIndex];
+                console.log("Opening " + file.path)
+                execOpen(file.path);
+            } else execMode(matches);
+        }
+    });
+
+    process.stdin.on('end', () => {
+        process.stdout.write('end');
+    });
+}
+
+function inputValid(input) {
+    let closers = ['close', 'exit', 'done', 'bye']
+    if (closers.includes(input)) process.exit(1);
+    return (!isNaN(parseInt(input)))
+}
+
+function execOpen(file) {
+    exec(`xdg-open "${file}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+    })
+}
 
 function main() {
     if (!query.andTags && !query.orTags) query.andTags = query._;
@@ -28,10 +73,13 @@ function main() {
 
     if (matches) {
         if (!query.default.limit) matches = matches.slice(0, query.limit);
-        matches.forEach(logMatch)
+
+        if (!query.exec) logMatches(matches)
+        else execMode(matches);
     }
 
-    process.exit(1);
+
+    // process.exit(1);
 }
 
 main()
