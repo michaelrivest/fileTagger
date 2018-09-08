@@ -3,6 +3,7 @@ let path = require('path');
 let childProcess = require('child_process');
 let relPath = require('./relPath');
 let store = require('./fStore');
+let config = require('./config');
 
 let args = [
     { arg: '-a', name: 'andTags', type: 'array' },
@@ -39,7 +40,7 @@ function createExecListener (matches) {
                 let fileIndex = parseInt(chunk) - 1;
                 let file = matches[fileIndex];
                 console.log("Opening " + file.path)
-                execOpen(file.path);
+                execOpen(file);
             } else execMode(matches);
         }
     }
@@ -66,26 +67,50 @@ function execMode(matches) {
     });
 }
 
+function findDefaultProgram (file) {
+    let dProgs = config.defaultPrograms;
+    console.log(dProgs);
+
+    let filters = { 
+        category: file.category, 
+        ext: path.extname(file.path),
+        name: file.path 
+    }
+
+    return dProgs.reduce((acc, prog) => {
+       for (let filter of Object.keys(filters)) {
+           let filterCheck = prog.opens.find(t => Object.keys(t)[0] == filter);
+           if (filterCheck && filterCheck[filter].includes(filters[filter]) ) return prog; 
+           else if (!acc && prog.options.fallback) return prog;
+           else return acc;
+       }
+    }) 
+}
+
+function editorOpen(editor, file) {
+    process.stdin.removeListener('readable', execListener);
+    let editorProc = childProcess.spawn(editor, [`${file.path}`], {shell: true, stdio: ['inherit', 'inherit', 'inherit' ] }) 
+    editorProc.on('close', function (e, code) {
+         main()  
+    });
+
+}
+
 function execOpen(file) {
-    const execCB = function (error, stdout, stderr) {
-         if (error) {
-            console.error(`exec error: ${error}`);
-            return;
+    const execCB = (e, sout, serr) => {
+         if (e) console.error(`exec error: ${e}`);
+    }
+
+    let dProgram = findDefaultProgram(file);
+    if (dProgram) {
+        if (dProgram.options.editor) {
+            editorOpen(dProgram.program, file);
+        } else {
+            childProcess.exec(`${dProgram.program} "${file.path}"`, execCB)
         }
-    }
-
-    if (editorFiles.includes(path.extname(file))) {
-        let command = process.env.EDITOR || "vim";
-        process.stdin.removeListener('readable', execListener);
-        let editor = childProcess.spawn(command, [`${file}`], {shell: true, stdio: ['inherit', 'inherit', 'inherit' ] }) 
-        editor.on('close', function (e, code) {
-           main()  
-        });
     } else {
-       let command = "xdg-open"
-       childProcess.exec(`${command} "${file}"`, execCB)
+        editorOpen(process.env.EDITOR, file);
     }
-
 }
 
 function main() {

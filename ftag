@@ -1,6 +1,7 @@
 #! /usr/local/bin/node
 const fs = require('fs');
 const path = require('path');
+const config = require('./config');
 const store = require('./fStore');
 
 let args = [
@@ -13,16 +14,6 @@ let args = [
 
 let argv = require('./argParse')(args, process.argv);
 
-const fileTypes = {
-    'document': ['txt', 'doc', 'docx', 'md', 'rtf', 'html'],
-    'book': ['pdf', 'mobi', 'epub', 'djvu', 'epub', ],
-    'code': ['js', 'ts', 'c', 'cc', ],
-    'data': ['json', 'zip', 'csv', 'db', 'bz2', 'ini', 'rar' ],
-    'video': ['mkv', 'mp4', 'wmv', 'mpg', 'avi', 'swf',],
-    'image': ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg' ],
-    'audio': ['mp3', 'wav']
-}
-
 const logPriority = argv.verbose ? 2 : argv.quiet ? 0 : 1;
 
 const tail = (iter) => iter.slice(1, iter.length);
@@ -31,7 +22,7 @@ const standardExt = (fileName) => tail(path.extname(fileName)).toLowerCase();
 
 const findKeyIncluding = (obj, value) => Object.keys(obj).find(key => obj[key].includes(value))
 
-const getFileCategory = (fileName) => findKeyIncluding(fileTypes, standardExt(fileName));
+const getFileCategory = (fileName) => findKeyIncluding(config.fileTypes, standardExt(fileName));
 
 const getFileNames = (files, dirName) => files.map(file => path.join(dirName, file));
 
@@ -161,7 +152,6 @@ function getTags() {
 function main() {
     console.time("ftag");
 
-    checkStore();
     validateArgs();
 
     let tags = getTags();
