@@ -1,12 +1,22 @@
 let fs = require('fs')
 let path = require('path');
-let store = require('./store');
+
+
+let store;
+let ensureStore = function() {
+    try {
+        store = require('./store');
+    } catch (err) {
+        fs.writeFileSync(path.join(__dirname, 'store'), "{}")
+    }
+}();
 
 const hasAny = (qArray, tArray) => qArray.some(q => tArray.some(t => t == q));
 
 const hasAll = (qArray, tArray) => qArray.every(q => tArray.includes(q));
 
 const addToStore = (fileRecord) => store.push(fileRecord);
+
 
 function saveStore(cb) { 
     fs.writeFile(path.join(__dirname, './store.json'), JSON.stringify(store), cb);  

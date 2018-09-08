@@ -1,6 +1,6 @@
 #! /usr/local/bin/node
 let path = require('path');
-let exec = require('child_process').exec
+let childProcess = require('child_process');
 let relPath = require('./relPath');
 let store = require('./fStore');
 
@@ -8,63 +8,84 @@ let args = [
     { arg: '-a', name: 'andTags', type: 'array' },
     { arg: '-c', name: 'category', type: 'array' },
     { arg: '-o', name: 'orTags', type: 'array' },
-    { arg: '-r', name: 'readMode', type: 'boolean' },
+    { arg: '-r', name: 'read', type: 'boolean' },
     { arg: '-n', name: 'name', type: 'string' },
-    { arg: '-x', name: 'exec', type: 'boolean' },
+    { arg: '-l', name: 'limit', type: 'number', default: 1 },
+    { arg: '-i', name: 'info', type: 'boolean' },
     { arg: '-f', name: 'fullPath', type: 'boolean' },
-    { arg: '-l', name: 'limit', type: 'number', default: 1 }
+    { arg: '-x', name: 'exec', type: 'boolean' },
 ]
 
 let query = require('./argParse')(args, process.argv);
 
+let closers = ['close', 'exit', 'done', 'bye']
 
-function logMatches(matches) {
-    matches.forEach(logMatch)
-}
+let editorFiles = ['.txt', '.js', '.c', '.cpp']
 
-function logMatch(match, i) {
-    let name = query.fullPath ? match.path : relPath(match.path);
-    if (query.exec) console.log(`${i + 1}:  ${path.basename(name)}`)
-    else console.log(name);
+const isExit = (input) => (closers.includes(input.trim().toLowerCase())) 
 
-    if (query.readMode) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `)
-}
+const logMatches = (matches) => matches.forEach(logMatch)
 
-function execMode(matches) {
-    console.log("Exec mode - Enter a number to open a file, type 'exit' to quit.")
-    logMatches(matches);
+const inputValidator = (matches) => (input) => (!isNaN(parseInt(input)) && parseInt(input) <= matches.length && parseInt(input) > 0)
 
-    process.stdin.setEncoding('utf8');
-    process.stdin.on('readable', () => {
+var execListener;
+function createExecListener (matches) {
+    let inputValid = inputValidator(matches);
+    return function () {
         const chunk = process.stdin.read();
         if (chunk !== null) {
-            if (inputValid(chunk)) {
+            if (isExit(chunk)) process.exit(1);
+            else if (inputValid(chunk)) {
                 let fileIndex = parseInt(chunk) - 1;
                 let file = matches[fileIndex];
                 console.log("Opening " + file.path)
                 execOpen(file.path);
             } else execMode(matches);
         }
-    });
+    }
+}
+
+function logMatch(match, i) {
+    let name = query.fullPath ? match.path : relPath(match.path);
+    if (!query.read) console.log(`${i + 1}:  ${path.basename(name)}`)
+    else console.log(name);
+
+    if (query.info) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `)
+}
+
+function execMode(matches) {
+    execListener = createExecListener(matches);
+    console.log("Enter a number to open a file, type 'exit' to quit.")
+    logMatches(matches);
+
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('readable', execListener );
 
     process.stdin.on('end', () => {
         process.stdout.write('end');
     });
 }
 
-function inputValid(input) {
-    let closers = ['close', 'exit', 'done', 'bye']
-    if (closers.includes(input)) process.exit(1);
-    return (!isNaN(parseInt(input)))
-}
-
 function execOpen(file) {
-    exec(`xdg-open "${file}"`, (error, stdout, stderr) => {
-        if (error) {
+    const execCB = function (error, stdout, stderr) {
+         if (error) {
             console.error(`exec error: ${error}`);
             return;
         }
-    })
+    }
+
+    if (editorFiles.includes(path.extname(file))) {
+        let command = process.env.EDITOR || "vim";
+        process.stdin.removeListener('readable', execListener);
+        let editor = childProcess.spawn(command, [`${file}`], {shell: true, stdio: ['inherit', 'inherit', 'inherit' ] }) 
+        editor.on('close', function (e, code) {
+           main()  
+        });
+    } else {
+       let command = "xdg-open"
+       childProcess.exec(`${command} "${file}"`, execCB)
+    }
+
 }
 
 function main() {
@@ -74,12 +95,9 @@ function main() {
     if (matches) {
         if (!query.default.limit) matches = matches.slice(0, query.limit);
 
-        if (!query.exec) logMatches(matches)
+        if (query.read) logMatches(matches)
         else execMode(matches);
     }
-
-
-    // process.exit(1);
 }
 
 main()

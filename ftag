@@ -92,7 +92,7 @@ function getFileData(files) {
 
 function getFileRecords(files) {
     let filesOnly = getDirFiles(files).filter(f => f.type == 'file')
-    log(1, "Files: " + filesOnly.map(f => path.basename(f.path)).join(', '))
+    log(2, "Files: " + filesOnly.map(f => path.basename(f.path)).join('\n'))
     return filesOnly.map((file) => {
         let existing = store.searchStore({ path: file.path })
         if (existing) log(2, "Updating File: " + existing[0].path)
@@ -101,37 +101,84 @@ function getFileRecords(files) {
 }
 
 function setTags(tags, files) {
-    log(1, "Setting Tags: " + tags.join(', '))
+    let allFiles = getFileRecords(files);
+    log(1, "Setting Tags: " + tags.join(', ') + " To " + allFiles.length + " Files.")
+
     let addTags = tagAdder(tags);
-    getFileRecords(files).forEach(perform(addTags, readTags));
+    allFiles.forEach(perform(addTags, readTags));
 }
 
 
 function remTags(tags, files) {
-    log(1, "Deleting Tags: " + tags.join(', '));
+    let allFiles = getFileRecords(files);
+    log(1, "Deleting Tags: " + tags.join(', ') + " To " + allFiles.length + " Files.");
     let deleteTags = tagDeleter(tags);
-    getFileRecords(files).forEach(perform(deleteTags, readTags));
+    allFiles.forEach(perform(deleteTags, readTags));
 }
 
+
 function validateArgs() {
+    if (process.stdin.isTTY) {
     if (!argv._ || argv._.length < 1) exitMessage("No files Specified - Enter file / directories before other options.");
     else if (!argv.tags || argv.tags.length < 1) exitMessage("Specify tags to apply with -t");
+    } else {
+        if ((!argv.tags || argv.tags.length < 1 ) && ( !argv._ || argv._.length < 1)) exitMessage("Specify tags to apply with -t");
+    }
+}
+
+function getFilesFromStdin(cb) {
+        process.stdin.setEncoding('utf8');
+        let fArr = [];
+        process.stdin.on('readable', () => {
+            let chunk;
+            while (chunk = process.stdin.read()) fArr = fArr.concat(chunk.split('\n'));
+        });
+        process.stdin.on('end', () => {
+            fArr = fArr.filter(f => f);
+            let files = getFileData(getFileNames(fArr, process.cwd()));
+            cb(files)
+        });
+}
+
+function getFiles(cb) {
+    if (process.stdin.isTTY) {
+        let files = getFileData(getFileNames(argv._, process.cwd()));
+        cb(files);
+    } else {
+        getFilesFromStdin(cb);
+    }
+
+}
+
+function getTags() {
+    if (process.stdin.isTTY) {
+        return argv.tags;
+    } else {
+        return argv.tags ? argv.tags : argv._; 
+    }
 }
 
 function main() {
     console.time("ftag");
 
+    checkStore();
     validateArgs();
-    let files = getFileData(getFileNames(argv._, process.cwd()));
-    let tags = argv.tags;
 
-    if (argv.deleteMode) remTags(tags, files);
-    else setTags(tags, files);
+    let tags = getTags();
+    
+    getFiles((files) => {
+         if (argv.deleteMode) remTags(tags, files);
+        else setTags(tags, files);
 
     store.saveStore((err, saved) => {
         if (err) exitMessage(err); 
         else exitMessage(`Saved ${files.length} files`);
     });
+
+})
+
 }
 
 main();
+
+
