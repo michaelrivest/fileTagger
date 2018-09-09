@@ -1,5 +1,5 @@
 Add file tagger to PATH: 
-echo 'export PATH=$PATH:/path/to/fileTagger' >> ~/.bashrc & source ~/.bashrc
+echo 'export PATH=$PATH:/path/to/fileTagger' >> ~/.bashrc && source ~/.bashrc
 
 File Tagger provides two command line utilites: ftag for managing tags for your files, and fsearch for searching those files based on tags and other criteria. fsearch also includes a mode for quickly opening files using programs specified in config.json.
 
