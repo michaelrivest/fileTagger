@@ -4,6 +4,7 @@ let childProcess = require('child_process');
 let relPath = require('./relPath');
 let store = require('./fStore');
 let config = require('./config');
+let U = require('./util');
 
 let args = [
     { arg: '-a', name: 'andTags', type: 'array' },
@@ -67,29 +68,30 @@ function execMode(matches) {
     });
 }
 
+
 function findDefaultProgram (file) {
     let dProgs = config.defaultPrograms;
-    console.log(dProgs);
 
     let filters = { 
         category: file.category, 
-        ext: path.extname(file.path),
+        extension: U.standardExt(file.path),
         name: file.path 
     }
 
     return dProgs.reduce((acc, prog) => {
-       for (let filter of Object.keys(filters)) {
-           let filterCheck = prog.opens.find(t => Object.keys(t)[0] == filter);
-           if (filterCheck && filterCheck[filter].includes(filters[filter]) ) return prog; 
-           else if (!acc && prog.options.fallback) return prog;
-           else return acc;
-       }
-    }) 
+        for (let criteria in prog.opens) {
+            if (prog.opens[criteria].includes(filters[criteria])) return prog; 
+        }
+
+        if (!acc && prog.options.fallback) return prog;
+        else return acc;
+    }, null) 
 }
 
 function editorOpen(editor, file) {
+    let editorArgs = editor.split(' ');
     process.stdin.removeListener('readable', execListener);
-    let editorProc = childProcess.spawn(editor, [`${file.path}`], {shell: true, stdio: ['inherit', 'inherit', 'inherit' ] }) 
+    let editorProc = childProcess.spawn(editorArgs[0], [...editorArgs.slice(1,), `"${file.path}"`], {shell: true, stdio: ['inherit', 'inherit', 'inherit' ] }) 
     editorProc.on('close', function (e, code) {
          main()  
     });
@@ -104,11 +106,12 @@ function execOpen(file) {
     let dProgram = findDefaultProgram(file);
     if (dProgram) {
         if (dProgram.options.editor) {
-            editorOpen(dProgram.program, file);
+            editorOpen(dProgram.command, file);
         } else {
-            childProcess.exec(`${dProgram.program} "${file.path}"`, execCB)
+            childProcess.exec(`${dProgram.command} "${file.path}"`, execCB)
         }
     } else {
+        console.log(`No default program found - edit your defaults in ${__dirname}/config.json`);
         editorOpen(process.env.EDITOR, file);
     }
 }

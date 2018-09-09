@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const config = require('./config');
 const store = require('./fStore');
+const U = require('./util');
 
 let args = [
     { arg: '-t', name: 'tags', type: 'array' },
@@ -16,13 +17,7 @@ let argv = require('./argParse')(args, process.argv);
 
 const logPriority = argv.verbose ? 2 : argv.quiet ? 0 : 1;
 
-const tail = (iter) => iter.slice(1, iter.length);
-
-const standardExt = (fileName) => tail(path.extname(fileName)).toLowerCase(); 
-
-const findKeyIncluding = (obj, value) => Object.keys(obj).find(key => obj[key].includes(value))
-
-const getFileCategory = (fileName) => findKeyIncluding(config.fileTypes, standardExt(fileName));
+const getFileCategory = (fileName) => U.findKeyIncluding(config.fileTypes, U.standardExt(fileName));
 
 const getFileNames = (files, dirName) => files.map(file => path.join(dirName, file));
 
@@ -30,8 +25,6 @@ const dirFileNames = (dir) => getFileNames(fs.readdirSync(dir), dir);
 
 const getDirFiles = (files) => files.reduce((all, file) => { 
     return file.type == 'dir' ? all.concat(getDirFiles(file.files)) : all.concat([file]) }, []);
-
-const perform = (...actions) => (input) => actions.forEach(action => action(input));
 
 const tagDeleter = (tags) => (file) => tags.forEach((tag) => file.tags.includes(tag) ? file.tags.splice(file.tags.indexOf(tag), 1) : null);
 
@@ -96,7 +89,7 @@ function setTags(tags, files) {
     log(1, "Setting Tags: " + tags.join(', ') + " To " + allFiles.length + " Files.")
 
     let addTags = tagAdder(tags);
-    allFiles.forEach(perform(addTags, readTags));
+    allFiles.forEach(U.perform(addTags, readTags));
 }
 
 
@@ -104,7 +97,7 @@ function remTags(tags, files) {
     let allFiles = getFileRecords(files);
     log(1, "Deleting Tags: " + tags.join(', ') + " To " + allFiles.length + " Files.");
     let deleteTags = tagDeleter(tags);
-    allFiles.forEach(perform(deleteTags, readTags));
+    allFiles.forEach(U.perform(deleteTags, readTags));
 }
 
 

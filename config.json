@@ -1,19 +1,19 @@
 {
     "defaultPrograms": [ 
         {
-            "program": "vim", 
-            "opens": [{"type": ["document", "code", "data"]}],
+            "command": "vim", 
+            "opens": {"category": ["document", "code", "data"]},
             "options": { "editor": true }
 
         },
         {
-            "program": "mupdf", 
-            "opens": [{"ext": ["pdf"] }],
+            "command": "mupdf -r 150", 
+            "opens": {"extension": ["pdf", "epub"] },
             "options": {}
         },
         { 
-            "program": "xdg-open",
-            "opens": [{"type": ["image", "video", "audio" ]} ],
+            "command": "xdg-open",
+            "opens": {"category": ["image", "video", "audio" ]}, 
             "options": { "fallback": true }
         }
     ],

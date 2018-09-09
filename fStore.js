@@ -1,6 +1,6 @@
 let fs = require('fs')
 let path = require('path');
-
+let U = require('./util.js');
 
 let store;
 let ensureStore = function() {
@@ -11,12 +11,9 @@ let ensureStore = function() {
     }
 }();
 
-const hasAny = (qArray, tArray) => qArray.some(q => tArray.some(t => t == q));
-
-const hasAll = (qArray, tArray) => qArray.every(q => tArray.includes(q));
-
-const addToStore = (fileRecord) => store.push(fileRecord);
-
+function addToStore (fileRecord) {
+    store.push(fileRecord);
+}
 
 function saveStore(cb) { 
     fs.writeFile(path.join(__dirname, './store.json'), JSON.stringify(store), cb);  
@@ -30,8 +27,8 @@ function buildChecks(q) {
     if (q.name) checks.push((file) => path.basename(file.path).toLowerCase().includes(q.name.toLowerCase()))
 
     if (q.category) checks.push((file) => q.category.includes(file.category));
-    if (q.orTags && q.orTags.length > 0) checks.push((file) => hasAny(q.orTags, file.tags));
-    if (q.andTags && q.andTags.length > 0) checks.push((file) => hasAll(q.andTags, file.tags));
+    if (q.orTags && q.orTags.length > 0) checks.push((file) => U.hasAny(q.orTags, file.tags));
+    if (q.andTags && q.andTags.length > 0) checks.push((file) => U.hasAll(q.andTags, file.tags));
 
     return (file) => checks.every((check) => check(file))
 }
