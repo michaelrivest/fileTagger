@@ -49,7 +49,7 @@ function createExecListener (matches) {
 
 function logMatch(match, i) {
     let name = query.fullPath ? match.path : relPath(match.path);
-    if (!query.read) console.log(`${i + 1}:  ${path.basename(name)}`)
+    if (query.exec) console.log(`${i + 1}:  ${path.basename(name)}`)
     else console.log(name);
 
     if (query.info) console.log(`(${match.category || ""}) [${match.tags.join(', ')}] `)
@@ -123,8 +123,8 @@ function main() {
     if (matches) {
         if (!query.default.limit) matches = matches.slice(0, query.limit);
 
-        if (query.read) logMatches(matches)
-        else execMode(matches);
+        if (query.exec) execMode(matches)
+        else logMatches(matches);
     }
 }
 
