@@ -43,14 +43,17 @@ Specify exec mode using *-x*. Exec mode will display your results along with a n
 ## Config: 
 ### Default Programs: 
 The *defaultPrograms* property is an array of programs fsearch will use to open files in exec mode. It will use the last program in the array which contains criteria matching the specified file to open, Ex: 
-   ``` 
-        {
+
+```
+{
             "command": "mupdf -r 150", 
             "opens": {"extension": ["pdf", "epub"] },
             "options": {"fallback":false, "editor": false }
         }
-     ```
+```
+
 Will be used to open any file with a .pdf or .epub extension. Other Criteria include category, and file name. Ex: 
+
 ```
 {
     "command": "yourCustomCommand", 
