@@ -87,7 +87,6 @@ function getFileRecords(files) {
 function setTags(tags, files) {
     let allFiles = getFileRecords(files);
     log(1, "Setting Tags: " + tags.join(', ') + " To " + allFiles.length + " Files.")
-
     let addTags = tagAdder(tags);
     allFiles.forEach(U.perform(addTags, readTags));
 }
@@ -155,7 +154,7 @@ function main() {
 
     store.saveStore((err, saved) => {
         if (err) exitMessage(err); 
-        else exitMessage(`Saved ${files.length} files`);
+        else exitMessage(``);
     });
 
 })
