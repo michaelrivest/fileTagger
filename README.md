@@ -10,19 +10,27 @@ echo 'export PATH=$PATH:/path/to/fileTagger' >> ~/.bashrc && source ~/.bashrc
 
 ## ftag Usage: 
 
-```ftag ./js -t js javascript```
+```
+ftag ./js -t js javascript
+```
 The first argument is a list of files or folders - if not specified, ftag will read this arguement from stdin. If a folder is specified, tags will be applied recursively.  The "-t" option will add the list of tags following it to the file. 
 
 The *-d* command will delete tags: 
-```ftag ./js -d jvaascript```
+```
+ftag ./js -d jvaascript
+```
 
 
 ## fsearch Usage: 
-```fsearch javascript node```
+```
+fsearch javascript node
+```
 The first argument is a list of tags to search - fsearch will display results that match every tag specified. This is the same as specifying *-a* followed by your list of tags. 
 
 To display results matching any of the tags listed, use the "-o" option: 
-```fsearch -o javascript node```
+```
+fsearch -o javascript node
+```
 
 ### Exec Mode: 
 Specify exec mode using *-x*. Exec mode will display your results along with a number - Enter this number to open the corresponding file using the program specified in your config.json, or type exit to quit.  
