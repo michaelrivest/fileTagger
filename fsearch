@@ -1,10 +1,10 @@
 #! /usr/local/bin/node
 let path = require('path');
 let childProcess = require('child_process');
-let relPath = require('./relPath');
-let store = require('./fStore');
+let relPath = require('./lib/relPath');
+let store = require('./lib/fStore');
 let config = require('./config');
-let U = require('./util');
+let U = require('./lib/util');
 
 let args = [
     { arg: '-a', name: 'andTags', type: 'array' },
@@ -18,7 +18,7 @@ let args = [
     { arg: '-x', name: 'exec', type: 'boolean' },
 ]
 
-let query = require('./argParse')(args, process.argv);
+let query = require('./lib/argParse')(args, process.argv);
 
 let closers = ['close', 'exit', 'done', 'bye']
 

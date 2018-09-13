@@ -2,8 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');
-const store = require('./fStore');
-const U = require('./util');
+const store = require('./lib/fStore');
+const U = require('./lib/util');
 
 let args = [
     { arg: '-t', name: 'tags', type: 'array' },
@@ -13,7 +13,7 @@ let args = [
     { arg: '-v', name: 'verbose', type: 'boolean' },
 ]
 
-let argv = require('./argParse')(args, process.argv);
+let argv = require('./lib/argParse')(args, process.argv);
 
 const logPriority = argv.verbose ? 2 : argv.quiet ? 0 : 1;
 
