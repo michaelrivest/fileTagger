@@ -4,6 +4,7 @@ File Tagger provides two command line utilites: ftag for adding and removing fil
 
 
 ### Add File Tagger to PATH: 
+On Linux: 
 ```
 echo 'export PATH=$PATH:/path/to/fileTagger' >> ~/.bashrc && source ~/.bashrc
 ```
